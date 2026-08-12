@@ -1,0 +1,27 @@
+{
+    "name":"ALC Environment",
+
+    "dockerComposeFile":"docker-compose.yml",
+    "service":"app",
+    "workspaceFolder":"/workspace",
+
+    "customizations":{
+        "vscode":{
+            "extensions":[
+                "ms-python.python",
+                "ms-toolsai.jupyter",
+                "ms-python.vscode-pylance",
+                "ms-vscode-remote.remote-containers",
+                "ms-azuretools.vscode-containers",
+                "ms-toolsai.datawrangler"
+            ],
+            "settings":{
+                "python.testing.pytestEnabled":true,
+                "python.testing.pytestArgs": ["tests"]
+            }
+        }
+    },
+
+    "postCreateCommand":"pip install numpy pandas matplotlib seaborn pytest"
+
+}

@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+
+  app:
+    image: mcr.microsoft.com/devcontainers/python:3.13
+    container_name: compilador_python_ALC
+    volumes:
+      - ..:/workspace
+    command: sleep infinity
