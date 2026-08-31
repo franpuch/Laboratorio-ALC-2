@@ -22,10 +22,10 @@ def error_relativo(x, y, tol = 1e-15) -> float :
 
 def matricesIguales(A, B, tol = 1e-12) -> bool :
     
-    if (len(A) != len(B)) :
+    if (len(A) != len(B)) :   # Miro que tengan igual número de filas.
         return False
     
-    if (any(len(A[i]) != len(B[i]) for i in range(len(A)))) : # Miro que todas las filas sean de igual tamaño.
+    if (any(len(A[i]) != len(B[i]) for i in range(len(A)))) : # Miro que todas las filas sean de igual tamaño (y que tengan igual cantidad de columnas).
         return False
 
     for i in range(len(A)) :
