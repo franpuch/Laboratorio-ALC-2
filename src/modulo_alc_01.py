@@ -10,7 +10,21 @@ def error(x, y) -> float :
     
     return np.abs(x - y) 
 
-def error_relativo(x, y, tol = 1e-15) -> float :
+def error_relativo(x, y) -> float :
+
+    x = np.float64(x) 
+    y = np.float64(y) 
+    
+    if (abs(x) <= 1e-15) :
+        return np.abs(y)
+    
+    return np.abs(x - y) / np.abs(x)
+
+def error_relativo_v2(x, y, tol = 1e-15) -> float :
+
+    '''
+    Esta no es la versión que envié por el servidor de test (porque decía que no cumplía la signatura), pero creo que es mas correcta que la otra.
+    '''
 
     x = np.float64(x) 
     y = np.float64(y) 
@@ -20,7 +34,25 @@ def error_relativo(x, y, tol = 1e-15) -> float :
     
     return np.abs(x - y) / np.abs(x)
 
-def matricesIguales(A, B, tol = 1e-12) -> bool :
+def matricesIguales(A, B) -> bool :
+    
+    if (len(A) != len(B)) :   # Miro que tengan igual número de filas.
+        return False
+    
+    if (any(len(A[i]) != len(B[i]) for i in range(len(A)))) : # Miro que todas las filas sean de igual tamaño (y que tengan igual cantidad de columnas).
+        return False
+
+    for i in range(len(A)) :
+        for j in range(len(A[i])) :
+            if (error(A[i][j], B[i][j]) > 1e-12) :   # Uso la función 'error()' que implemente antes.
+                return False
+    return True
+
+def matricesIguales_v2(A, B, tol = 1e-12) -> bool :
+
+    '''
+    Esta no es la versión que envié por el servidor de test (porque decía que no cumplía la signatura), pero creo que es mas correcta que la otra.
+    '''
     
     if (len(A) != len(B)) :   # Miro que tengan igual número de filas.
         return False
