@@ -42,6 +42,7 @@ def normaliza(x:np.ndarray, p:int) -> list[list[float]] :
     return res 
 
 #! No pasa el Test del Servidor de Entregas: La ejecución demoró más de lo permitido.
+#! Pero como su entrega no es obligatoria y pasa los test locales, lo dejo así.
 def normaMatMC(A:np.ndarray, q:int, p:int, Np:np.ndarray) -> tuple[float, np.ndarray] :
     
     columnas:int = A.shape[1]
@@ -63,10 +64,7 @@ def normaMatMC(A:np.ndarray, q:int, p:int, Np:np.ndarray) -> tuple[float, np.nda
             
     return (np.float64(res), vector_max) 
 
-#! No pasa el Test del Servidor de Entregas: No se pueden correr los test.
-def normaExacta(A:np.ndarray, p:int) -> float | None : 
-    
-    A = np.array(A) 
+def normaExacta(A:np.ndarray, p=[1, 'inf']) -> float | tuple[float,float] | None : 
     
     nro_filas, nro_columnas = np.shape(A) 
     
@@ -97,22 +95,48 @@ def normaExacta(A:np.ndarray, p:int) -> float | None :
                 suma_max = suma_actual 
         
         return np.float64(suma_max) 
+
+    elif (p == [1, 'inf']) :
+
+        # Primero calculamos la Norma 1.
+        norma_1:float = 0 
+                
+        for j in range(0, nro_columnas) :
+            suma_actual = 0
+                    
+            for i in range(0, nro_filas) : 
+                suma_actual += np.abs(A[i][j]) 
+                        
+            if (norma_1 < suma_actual) : 
+                norma_1 = suma_actual 
+
+        # Ahora la Norma Infinito.
+        norma_inf:float = 0 
+                
+        for i in range(0, nro_filas) : 
+            suma_actual = 0 
+                    
+            for j in range(0, nro_columnas) : 
+                suma_actual += np.abs(A[i][j]) 
+                        
+            if (norma_inf < suma_actual) : 
+                norma_inf = suma_actual 
+
+        return [norma_1, norma_inf]
     
     else : 
         return None 
 
-def condMC(A:np.ndarray, p:int | str) -> float : 
+def condMC(A:np.ndarray, p:int | str, Np:int=10000) -> float : 
     
     A_inversa:np.ndarray = np.linalg.inv(A) 
-
-    Np:int = 10000 
     
     norma_A:float = normaMatMC(A, p, p, Np)[0] 
     norma_A_inv:float = normaMatMC(A_inversa, p, p, Np)[0] 
     
     return np.float64(norma_A * norma_A_inv) 
 
-def condExacto(A:np.ndarray, p:int | str) -> float | None : 
+def condExacta(A:np.ndarray, p:int | str) -> float | None : 
     
     A_inversa:np.ndarray = np.linalg.inv(A) 
     

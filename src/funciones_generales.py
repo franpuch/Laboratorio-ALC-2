@@ -1,8 +1,6 @@
 # Funciones de Uso General.
 
 import numpy as np
-from modulo_alc_01 import error, error_relativo
-from modulo_alc_03 import norma
 
 def esCuadrada(matriz:np.ndarray) -> bool : 
     if (matriz.shape[0] == 0) :
@@ -54,6 +52,8 @@ def traspuesta(matriz:np.ndarray) -> np.ndarray :
     return res 
 
 def esSimetrica(matriz:np.ndarray, atol: float = 1e-12) -> bool :
+
+    from modulo_alc_01 import error, error_relativo
     
     # Verifico si es cuadrada y algunas cositas más (que me llevaron a errores con el tiempo).
     if (matriz is None) :
@@ -172,6 +172,8 @@ def producto_interno_Especial(x1: np.ndarray, x2: np.ndarray) -> float :
     return res
 
 def normaliza_columnas(matriz:np.ndarray, p:int, tol:float = 1e-15) -> np.ndarray : 
+
+    from modulo_alc_03 import norma
 
     # Recibe una matriz y retorna la matriz con sus columnas normalizadas.
     
