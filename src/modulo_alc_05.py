@@ -148,16 +148,3 @@ def calculaQR(A, metodo='RH', tol=1e-12):
 
 
 # End.
-
-# -------------------------------------------------------------------------------- #
-
-A2 = np.array([[1., 2.],
-               [3., 4.]])
-
-A3 = np.array([[1., 0., 1.],
-               [0., 1., 1.],
-               [1., 1., 0.]])
-
-Q_prueba,R_prueba,extras2 = QR_con_HH(A3, extras=True)
-print(extras2['R_matrices'])
-print('\n', extras2['Q_matrices'])
