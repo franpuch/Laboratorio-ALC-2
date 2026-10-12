@@ -8,11 +8,16 @@
     "customizations":{
         "vscode":{
             "extensions":[
+
+                // Asistente de IA oficial de Google.
+                "Google.geminicodeassist",
+
+                // Soporte de lenguaje e Inteligencia para Python.
                 "ms-python.python",
-                "ms-toolsai.jupyter",
                 "ms-python.vscode-pylance",
-                "ms-vscode-remote.remote-containers",
-                "ms-azuretools.vscode-containers",
+
+                // Entorno de Notebooks y Análisis de Datos.
+                "ms-toolsai.jupyter",
                 "ms-toolsai.datawrangler"
             ],
             "settings":{
@@ -24,6 +29,9 @@
         }
     },
 
-    "postCreateCommand":"pip install numpy pandas matplotlib seaborn pytest"
+    "postCreateCommand": {
+        "update-pip": "pip install --upgrade pip",
+        "install-deps": "pip install numpy pandas matplotlib seaborn pytest"
+    }
 
 }
