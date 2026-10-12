@@ -24,46 +24,75 @@ A4 = np.array([[2., 0., 1., 3.],
                [3., 1., 0., 2.]])
 
 # --- Funcion Auxiliar para los Tests ---
+'''
 def check_QR(Q,R,A,tol=1e-10):
     # Comprueba Ortogonalidad y Reconstrucción
     assert np.allclose(Q.T @ Q, np.eye(Q.shape[1]), atol=tol)
     assert np.allclose(Q @ R, A, atol=tol)
+'''
 
 
 def test_QR_con_GS() :
     
     Q2,R2 = QR_con_GS(A2)
-    check_QR(Q2,R2,A2)
+    # check_QR(Q2,R2,A2)
+
+    assert np.allclose(Q2.T @ Q2, np.eye(Q2.shape[1]), atol=1e-10)
+    assert np.allclose(Q2 @ R2, A2, atol=1e-10)
 
     Q3,R3 = QR_con_GS(A3)
-    check_QR(Q3,R3,A3)
+    # check_QR(Q3,R3,A3)
+
+    assert np.allclose(Q3.T @ Q3, np.eye(Q3.shape[1]), atol=1e-10)
+    assert np.allclose(Q3 @ R3, A3, atol=1e-10)
 
     Q4,R4 = QR_con_GS(A4)
-    check_QR(Q4,R4,A4)
+    # check_QR(Q4,R4,A4)
+
+    assert np.allclose(Q4.T @ Q4, np.eye(Q4.shape[1]), atol=1e-10)
+    assert np.allclose(Q4 @ R4, A4, atol=1e-10)
 
 
 def test_QR_con_HH() :
 
-    Q2h,R2h = QR_con_GS(A2)
-    check_QR(Q2h,R2h,A2)
+    Q2h,R2h = QR_con_HH(A2)
+    # check_QR(Q2h,R2h,A2)
+
+    assert np.allclose(Q2h.T @ Q2h, np.eye(Q2h.shape[1]), atol=1e-10)
+    assert np.allclose(Q2h @ R2h, A2, atol=1e-10)
 
     Q3h,R3h = QR_con_HH(A3)
-    check_QR(Q3h,R3h,A3)
+    # check_QR(Q3h,R3h,A3)
+
+    assert np.allclose(Q3h.T @ Q3h, np.eye(Q3h.shape[1]), atol=1e-10)
+    assert np.allclose(Q3h @ R3h, A3, atol=1e-10)
 
     Q4h,R4h = QR_con_HH(A4)
-    check_QR(Q4h,R4h,A4)
+    # check_QR(Q4h,R4h,A4)
+
+    assert np.allclose(Q4h.T @ Q4h, np.eye(Q4h.shape[1]), atol=1e-10)
+    assert np.allclose(Q4h @ R4h, A4, atol=1e-10)
 
 
-def calculaQR() :
+def test_calculaQR() :
 
     Q2c,R2c = calculaQR(A2,metodo='RH')
-    check_QR(Q2c,R2c,A2)
+    # check_QR(Q2c,R2c,A2)
+
+    assert np.allclose(Q2c.T @ Q2c, np.eye(Q2c.shape[1]), atol=1e-10)
+    assert np.allclose(Q2c @ R2c, A2, atol=1e-10)
 
     Q3c,R3c = calculaQR(A3,metodo='GS')
-    check_QR(Q3c,R3c,A3)
+    # check_QR(Q3c,R3c,A3)
+
+    assert np.allclose(Q3c.T @ Q3c, np.eye(Q3c.shape[1]), atol=1e-10)
+    assert np.allclose(Q3c @ R3c, A3, atol=1e-10)
 
     Q4c,R4c = calculaQR(A4,metodo='RH')
-    check_QR(Q4c,R4c,A4)
+    # check_QR(Q4c,R4c,A4)
+
+    assert np.allclose(Q4c.T @ Q4c, np.eye(Q4c.shape[1]), atol=1e-10)
+    assert np.allclose(Q4c @ R4c, A4, atol=1e-10)
 
 
 # End.
