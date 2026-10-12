@@ -1,0 +1,69 @@
+# Tests Laboratorio 05 - Descomposición QR de Matrices.
+
+import numpy as np
+# import pytest
+
+from modulo_alc_04 import (
+    QR_con_GS,
+    QR_con_HH,
+    calculaQR
+)
+
+
+# --- Matrices de Prueba ---
+A2 = np.array([[1., 2.],
+               [3., 4.]])
+
+A3 = np.array([[1., 0., 1.],
+               [0., 1., 1.],
+               [1., 1., 0.]])
+
+A4 = np.array([[2., 0., 1., 3.],
+               [0., 1., 4., 1.],
+               [1., 0., 2., 0.],
+               [3., 1., 0., 2.]])
+
+# --- Funcion Auxiliar para los Tests ---
+def check_QR(Q,R,A,tol=1e-10):
+    # Comprueba Ortogonalidad y Reconstrucción
+    assert np.allclose(Q.T @ Q, np.eye(Q.shape[1]), atol=tol)
+    assert np.allclose(Q @ R, A, atol=tol)
+
+
+def test_QR_con_GS() :
+    
+    Q2,R2 = QR_con_GS(A2)
+    check_QR(Q2,R2,A2)
+
+    Q3,R3 = QR_con_GS(A3)
+    check_QR(Q3,R3,A3)
+
+    Q4,R4 = QR_con_GS(A4)
+    check_QR(Q4,R4,A4)
+
+
+def test_QR_con_HH() :
+
+    Q2h,R2h = QR_con_GS(A2)
+    check_QR(Q2h,R2h,A2)
+
+    Q3h,R3h = QR_con_HH(A3)
+    check_QR(Q3h,R3h,A3)
+
+    Q4h,R4h = QR_con_HH(A4)
+    check_QR(Q4h,R4h,A4)
+
+
+def calculaQR() :
+
+    Q2c,R2c = calculaQR(A2,metodo='RH')
+    check_QR(Q2c,R2c,A2)
+
+    Q3c,R3c = calculaQR(A3,metodo='GS')
+    check_QR(Q3c,R3c,A3)
+
+    Q4c,R4c = calculaQR(A4,metodo='RH')
+    check_QR(Q4c,R4c,A4)
+
+
+# End.
