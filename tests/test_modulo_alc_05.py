@@ -3,7 +3,7 @@
 import numpy as np
 # import pytest
 
-from modulo_alc_04 import (
+from modulo_alc_05 import (
     QR_con_GS,
     QR_con_HH,
     calculaQR
