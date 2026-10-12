@@ -9,8 +9,7 @@
         "vscode":{
             "extensions":[
 
-                // Asistente de IA oficial de Google.
-                "Google.geminicodeassist",
+                // ... Aquí tengo pendiente añadir el cliente de AI ...
 
                 // Soporte de lenguaje e Inteligencia para Python.
                 "ms-python.python",
