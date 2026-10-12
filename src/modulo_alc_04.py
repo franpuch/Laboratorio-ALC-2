@@ -5,6 +5,7 @@ import numpy as np
 from funciones_generales import multiplicar_matrices, esSimetrica
 
 #! No pasa el Test del Servidor de Entregas: El código funciona pero no cumple el enunciado.
+#! Por ahora, me dijeron que ignore el servidor y si corre los test en local, estoy bien.
 def calculaLU(A: np.ndarray) :
     
     # Validaciones iniciales
@@ -181,6 +182,7 @@ def calculaLDV(A: np.ndarray) :
     return L, D, V 
 
 #! No pasa el Test del Servidor de Entregas: No se pueden correr los tests.
+#! Por ahora, me dijeron que ignore el servidor y si corre los test en local, estoy bien.
 def esSDP(A:np.ndarray, atol:float = 1e-8) -> bool :
     
     if (A is None) :
