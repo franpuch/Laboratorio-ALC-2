@@ -28,41 +28,42 @@ def norma(x:np.ndarray, p:int) -> float :
     return np.float64(suma**(1/p)) 
 
 def normaliza(x:np.ndarray, p:int) -> list[list[float]] :
-    
-    res:list[list[float]] = []
+    res = []
     
     for elemento in x :
+        # Calculo la norma una sola vez por vector.
+        n = norma(elemento, p)
         
-        if not(np.any(elemento)) :   # Es el vector nulo. 
+        # Si la norma es 0, es el vector nulo.
+        if (n == 0.0) :  
             res.append(elemento)
-        
+            
         else: 
-            res.append(elemento/norma(elemento, p))
+            res.append(elemento / n)
     
-    return res 
+    return res
 
-#! No pasa el Test del Servidor de Entregas: La ejecución demoró más de lo permitido.
-#! Pero como su entrega no es obligatoria y pasa los test locales, lo dejo así.
 def normaMatMC(A:np.ndarray, q:int, p:int, Np:np.ndarray) -> tuple[float, np.ndarray] :
+    columnas = A.shape[1]
     
-    columnas:int = A.shape[1]
-    
-    x = np.random.rand(Np, columnas)
+    ## 2. Ajusto el muestreo al rango [-1, 1] para explorar todas las direcciones.
+    x = np.random.rand(Np, columnas) * 2 - 1
     
     x = normaliza(x, p)
     
-    res:float = 0
+    res = -1.0
     vector_max = x[0] 
     
     for elemento in x :
-        
-        norma_actual = norma(calcularAx(A, elemento), q) 
+        ## A 'calcularAx' le pido explícitamente 'vector_fila=True' para que entregue un 1D y sea más eficiente.
+        ax = calcularAx(A, elemento, vector_fila=True)
+        norma_actual = norma(ax, q) 
         
         if (res <= norma_actual) : 
             res = norma_actual
             vector_max = elemento
             
-    return (np.float64(res), vector_max) 
+    return (res, vector_max)
 
 def normaExacta(A:np.ndarray, p=[1, 'inf']) -> float | tuple[float,float] | None : 
     
