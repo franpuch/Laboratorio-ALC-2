@@ -28,8 +28,6 @@ def traspuesta(matriz:np.ndarray) -> np.ndarray :
     return res 
 
 def esSimetrica(matriz:np.ndarray, atol: float = 1e-12) -> bool :
-
-    from modulo_alc_01 import error, error_relativo
     
     # Verifico si es cuadrada y algunas cositas más (que me llevaron a errores con el tiempo).
     if (matriz is None) :
@@ -46,7 +44,7 @@ def esSimetrica(matriz:np.ndarray, atol: float = 1e-12) -> bool :
     # Compara solo la mitad superior (para ahorrar tiempo).
     for i in range(filas) :
         for j in range(i + 1, columnas) :
-            if (abs(matriz[i, j], matriz[j, i]) > atol) :
+            if (abs(matriz[i, j] - matriz[j, i]) > atol) :
                 return False
             
     return True
@@ -131,8 +129,6 @@ def producto_interno(x1:np.ndarray, x2:np.ndarray) -> float :
     return res
 
 def normaliza_columnas(matriz:np.ndarray, p:int, tol:float = 1e-15) -> np.ndarray : 
-
-    from modulo_alc_03 import norma
 
     # Recibe una matriz y retorna la matriz con sus columnas normalizadas.
     
@@ -274,6 +270,7 @@ def norma(x:np.ndarray, p:int) -> float :
     return np.float64(suma**(1/p)) 
 
 def normaliza(x:np.ndarray, p:int) -> list[list[float]] :
+
     res = []
     
     for elemento in x :
@@ -290,6 +287,7 @@ def normaliza(x:np.ndarray, p:int) -> list[list[float]] :
     return res
 
 def normaMatMC(A:np.ndarray, q:int, p:int, Np:np.ndarray) -> tuple[float, np.ndarray] :
+    
     columnas = A.shape[1]
     
     ## 2. Ajusto el muestreo al rango [-1, 1] para explorar todas las direcciones.
@@ -816,6 +814,7 @@ def diagRH(A: np.ndarray, tol: float = 1e-15, K: int = 1000) :
 
     # Construyo B = H * A * H^T
     B = multiplicar_matrices(H_v1, multiplicar_matrices(A, traspuesta(H_v1)))
+    B = (B + traspuesta(B)/2)
     B[np.abs(B) < tol] = 0.0   # Limpio números que tomamos como cero (lo hardcodeo como cero).
 
     # Caso base 2 -> 'n = 2'.
