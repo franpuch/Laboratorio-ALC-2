@@ -1,8 +1,10 @@
+# Grupo: Jr Army
+
 # Funciones del Módulo ALC.
 
 import numpy as np
 
-# Funciones Generales ----------------------------------------------------------------------------------------------------------------------------- #
+# Funciones Auxiliares Propias -------------------------------------------------------------------------------------------------------------------- #
 
 def esCuadrada(matriz:np.ndarray) -> bool : 
     if (matriz.shape[0] == 0) :
@@ -1015,5 +1017,161 @@ def svd_reducida(A, k="max", tol=1e-15):
         return hatV, hatSig, hatU
 
     return hatU, hatSig, hatV
+
+# Funciones de TP ###################################################################################################################################
+
+# Ejercicio 2 ------------------------------------------------------------------------------------------------------------------------------------- #
+
+def obtenerQ3d(imgPts, objPts):
+
+    n = objPts.shape[0]   # Cantidad de imagenes
+
+    Q = np.zeros((2 * n, 12))
+
+    for i in range(n):
+
+        U, V, W = objPts[i]   # Agarramos el punto.
+        u, v = imgPts[i]      # Agarramos las coordenadas (u,v) del punto.
+
+        P = np.array([U, V, W, 1])
+
+        # Primera ecuación del punto i.
+        Q[2 * i, 0:4] = P
+        Q[2 * i, 8:12] = -u * P
+
+        # Segunda ecuación del punto i
+        Q[2 * i + 1, 4:8] = P
+        Q[2 * i + 1, 8:12] = -v * P
+
+        # Q es matriz de ceros, no hay que cambiar las columnas que quedan así.
+
+    return Q
+
+def resolverDLT3D(Q):
+
+    U, S, V = svd_reducida(Q)
+
+    m = V[:, -1]
+
+    M = np.reshape(m, (3, 4))
+
+    return M
+
+# Funcion Auxiliar.
+def corregirSignos(K, R, t):
+
+    p = 1 if K[0,0] > 0 else -1
+    q = 1 if K[1,1] > 0 else -1
+
+    D = np.array([[p, 0, 0],
+                  [0, q, 0],
+                  [0, 0, 1]])
+
+    K = multiplicar_matrices(K, D)
+    R = multiplicar_matrices(D, R)
+    t = calcularAx(D, t, vector_fila=True)
+
+    # Calculamos el determinante de R
+    detR = (R[0,0] * (R[1,1] * R[2,2] - R[1,2] * R[2,1])
+          - R[0,1] * (R[1,0] * R[2,2] - R[1,2] * R[2,0])
+          + R[0,2] * (R[1,0] * R[2,1] - R[1,1] * R[2,0]))
+
+    if (detR < 0) :
+        R = -R
+        t = -t
+
+    return K, R, t
+
+def devolverMatricesCalibracion3d(M, alphas_iguales = False, skew_cero = False):
+
+    # Separamos M en sus primeras 3 columnas y la última.
+    A = M[:, 0:3]
+    b = M[:, 3]
+
+    # Matriz que invierte el orden de las coordenadas.
+    J = np.array([[0, 0, 1],
+                  [0, 1, 0],
+                  [1, 0, 0]])
+
+    # Calculamos QR de A^T * J
+    B = multiplicar_matrices(traspuesta(A), J)
+    Q, T = QR_con_HH(B)   # Usamos HouseHolder porque es mas estable.
+
+    # Recuperamos K y R.
+    K = multiplicar_matrices(J, multiplicar_matrices(traspuesta(T), J))
+
+    R = multiplicar_matrices(J, traspuesta(Q))
+
+    # Recuperamos t resolviendo Kt = b
+    t = res_tri(K, b, inferior=False)
+
+    # Normalizamos K para que K[2,2] = 1
+    K = K / K[2, 2]
+
+    if (alphas_iguales) :
+      K, R, t = corregirSignos(K, R, t)
+
+      f = (K[0,0] + K[1,1]) / 2   # Usamos punto medio para quedarnos con un valor.
+
+      K[0,0] = f
+      K[1,1] = f
+
+    if (skew_cero) :
+      K[0,1] = 0
+
+    return R, t, K
+
+# Ejercicio 3 ------------------------------------------------------------------------------------------------------------------------------------- #
+
+def obtenerQ2d(imgPts, objPts):
+
+    n = objPts.shape[0]
+
+    Q = np.zeros((2*n, 9))
+
+    for i in range(n):
+
+        U, V = objPts[i]
+        u, v = imgPts[i]
+
+        P = np.array([U, V, 1])
+
+        # Primera fila correspondiente al punto i
+        Q[2*i, 0:3] = P
+        Q[2*i, 6:9] = -u * P
+
+        # Segunda fila correspondiente al punto i
+        Q[2*i+1, 3:6] = P
+        Q[2*i+1, 6:9] = -v * P
+
+    return Q
+
+# Función Auxiliar.
+def resolverH4(Q):
+
+    # Fijamos h9 = 1 y separamos las 8 incógnitas restantes.
+    A = Q[:, :8]
+    b = -Q[:, 8]
+
+    # Factorizamos A mediante QR.
+    Qort, R = QR_con_HH(A)
+
+    # Calculamos el lado derecho del sistema triangular.
+    y = calcularAx(traspuesta(Qort), b, vector_fila=True)
+
+    # Resolvemos R*x = y por sustitución hacia atrás.
+    x = res_tri(R, y, inferior=False)
+
+    # Reconstruimos el vector h, agregando h9 = 1.
+    h = np.zeros(9)
+    h[:8] = x
+    h[8] = 1
+
+    # Convertimos el vector h en la homografía H.
+    H = np.reshape(h, (3, 3))
+
+    return H
+
+
 
 # End.
