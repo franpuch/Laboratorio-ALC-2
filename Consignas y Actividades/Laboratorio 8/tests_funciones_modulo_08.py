@@ -7,6 +7,29 @@ Así que pego todas las funciones y corro el archivo como está.
 
 import numpy as np
 
+def multMAt(A, B):
+    es_vector = np.ndim(B) == 1
+
+    if es_vector:
+        B = np.reshape(B, (len(B), 1))
+
+    filasA, columnasA = A.shape
+    filasB, columnasB = B.shape
+
+    if columnasA != filasB:
+        return None
+
+    res = np.zeros((filasA, columnasB))
+
+    for i in range(filasA):
+        for j in range(columnasB):
+            res[i][j] = producto_interno(A[i,:], B[:,j])
+
+    if es_vector:
+        return res[:,0]
+
+    return res
+
 def error(x, y) -> float :
     
     x = np.float64(x) 
@@ -286,59 +309,51 @@ def diagRH(A: np.ndarray, tol: float = 1e-15, K: int = 1000) :
 
 # Ahora la función de este laboratorio.
 
-def svd_reducida(A:np.ndarray, k = "max", tol:float = 1e-15, reducida:bool = True) : 
+def svd_reducida(A, k="max", tol=1e-15):
+    m, n = A.shape
 
-    filas, columnas = A.shape
-    
-    trans = False
-    if (filas < columnas) :
+    transpuesta_original = False
+
+    if m < n:
         A = traspuesta(A)
-        trans = True
-        filas, columnas = A.shape   # Actualizo las variables de dimension. 
-        
-    B = multiplicar_matrices(traspuesta(A), A)
-    
-    V, D = diagRH(B, tol)
-    
-    valores_singulares:list[float] = []   # No nulos.
-    
-    for i in range(len(D)) :
-        
-        if (D[i, i] <= tol) :
-            break
-           
-        valores_singulares.append(np.sqrt(D[i, i]))
+        transpuesta_original = True
+
+    m, n = A.shape
 
     if k == "max":
-        k = len(valores_singulares)
+        k = n
     else:
-        k = min(k, len(valores_singulares))
-    
-    # Si es reducida, recortar
-    if reducida:
-        valores_singulares = valores_singulares[:k]
-        V = V[:, :k]
-    
-    V = normaliza_columnas(V, 2)
-    U = np.zeros((filas, filas if not reducida else k), dtype=np.float64)
-    
-    for i in range(k):
-        
-        if valores_singulares[i] <= tol:
-            U[:, i] = 0
-            
-        else:
-            U[:, i] = calcularAx(A, V[:, i], vector_fila=True) / valores_singulares[i]
-            
-    U = normaliza_columnas(U, 2)   # Normalizamos (para que quede unitaria). 
-    
-    if (trans) :
-        
-        return V, valores_singulares, U
-    
-    else:
-        
-        return U, valores_singulares, V
+        k = min(k, n)
+
+    hatSig = np.zeros(k)
+    hatV = np.zeros((n, k))
+    hatU = np.zeros((m, k))
+
+    AtA = multMAt(traspuesta(A), A)
+
+    S, D = diagRH(AtA)
+
+    j = 0
+
+    while j < k and D[j][j] > tol:
+
+        hatSig[j] = np.sqrt(D[j][j])
+
+        hatV[:, j] = S[:, j]
+
+        hatU[:, j] = multMAt(A, hatV[:, j]) / hatSig[j]
+
+        j += 1
+
+    hatSig = hatSig[:j]
+    hatV = hatV[:, :j]
+    hatU = hatU[:, :j]
+
+    if transpuesta_original:
+        return hatV, hatSig, hatU
+
+    return hatU, hatSig, hatV
+
 
 
 # Van los tests.
