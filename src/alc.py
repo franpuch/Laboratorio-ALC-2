@@ -625,6 +625,27 @@ def esSDP(A:np.ndarray, atol:float = 1e-8) -> bool :
 
     return True 
 
+def calculaCholesky(A:np.ndarray, atol=1e-10) -> np.ndarray :
+
+    # Verificaciones iniciales.
+    if (A is None) :
+        return None
+
+    filas, columnas = np.shape(A)
+    if (filas != columnas) :
+        return None
+
+    if (not esSDP(A)) :
+        return None
+
+    L, D, V = calculaLDV(A)
+
+    D = np.sqrt(D)
+
+    res:np.ndarray = multiplicar_matrices(L, D)
+
+    return res
+
 # Funciones Laboratorio 05 ------------------------------------------------------------------------------------------------------------------------ #
 
 def QR_con_GS(A, tol=1e-12, retorna_nops=False):
@@ -1171,6 +1192,44 @@ def resolverH4(Q):
     H = np.reshape(h, (3, 3))
 
     return H
+
+# Función Auxiliar para la construcción de v_ij (vector para cálculo de A), según el paper citado.
+def armarVij(ci, cj):
+
+    res = np.array([
+        ci[0] * cj[0],
+        ci[0] * cj[1] + ci[1] * cj[0],
+        ci[1] * cj[1],
+        ci[0] * cj[2] + ci[2] * cj[0],
+        ci[1] * cj[2] + ci[2] * cj[1],
+        ci[2] * cj[2]
+    ])
+
+    return res
+
+def armarA(Hlst):
+
+    N = len(Hlst)
+    A = np.zeros((2 * N, 6))
+
+    for j in range(N):
+
+        H = Hlst[j]
+
+        # Primeras dos columnas de la homografía.
+        c1 = H[:, 0]
+        c2 = H[:, 1]
+
+        # Calculamos los tres vectores necesarios.
+        v12 = armarVij(c1, c2)
+        v11 = armarVij(c1, c1)
+        v22 = armarVij(c2, c2)
+
+        # Las dos ecuaciones correspondientes a H_j
+        A[2j, :] = v12
+        A[2*j+1, :] = v11 - v22
+
+    return A
 
 
 
