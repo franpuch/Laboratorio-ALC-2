@@ -1226,10 +1226,93 @@ def armarA(Hlst):
         v22 = armarVij(c2, c2)
 
         # Las dos ecuaciones correspondientes a H_j
-        A[2j, :] = v12
-        A[2*j+1, :] = v11 - v22
+        A[2 * j, :] = v12
+        A[2 * j + 1, :] = v11 - v22
 
     return A
+
+def calcularMatrizK2D(A):
+
+    C = multiplicar_matrices(traspuesta(A), A)
+
+    V, D = diagRH(C)
+
+    # Buscamos la posición del menor autovalor.
+    indice_min = 0
+
+    for i in range(1, 6):
+        if D[i, i] < D[indice_min, indice_min]:
+            indice_min = i
+
+    # Autovector asociado al menor autovalor.
+    b = V[:, indice_min]
+
+    # Reconstruimos la matriz simétrica B.
+    B = np.array([
+        [b[0], b[1], b[3]],
+        [b[1], b[2], b[4]],
+        [b[3], b[4], b[5]]
+    ])
+
+    # B se determina a menos de escala y signo.
+    # Elegimos el signo que la hace definida positiva.
+    L = calculaCholesky(B)
+
+    if (L is None) :
+        L = calculaCholesky(-B)
+
+    if (L is None) :   # Si B ni -B es definida positiva, no podemos aplicar Cholesky.
+        return None
+
+    # Como B = L L^T, recuperamos K = (L^T)^-1.
+    K = inversa(traspuesta(L))
+
+    # Normalizamos para que K[2,2] = 1.
+    K = K / K[2, 2]
+
+    return K
+
+def obtenerPose2D(Hj, K):
+
+    # Separamos las tres columnas de la homografía.
+    c1 = Hj[:, 0]
+    c2 = Hj[:, 1]
+    c3 = Hj[:, 2]
+
+    # Resolvemos K * x = ci.
+    # Como K es triangular superior, usamos res_tri.
+    a1 = res_tri(K, c1, inferior=False)
+    a2 = res_tri(K, c2, inferior=False)
+    a3 = res_tri(K, c3, inferior=False)
+
+    # Calculamos el factor de escala.
+    lam = 1 / norma(a1, 2)
+
+    # Recuperamos las dos primeras columnas de R.
+    r1 = lam * a1
+    r2 = lam * a2
+
+    # GS entre r1 y r2 para ortogonalidad.
+    r2 = r2 - producto_interno(r1, r2) * r1
+    r2 = r2 / norma(r2, 2)
+
+    # Calculamos r3 mediante el producto vectorial.
+    r3 = np.array([
+        r1[1] * r2[2] - r1[2] * r2[1],
+        r1[2] * r2[0] - r1[0] * r2[2],
+        r1[0] * r2[1] - r1[1] * r2[0]
+    ])
+
+    # Construimos R por columnas.
+    R = np.zeros((3, 3))
+    R[:, 0] = r1
+    R[:, 1] = r2
+    R[:, 2] = r3
+
+    # Recuperamos la traslación.
+    t = lam * a3
+
+    return R, t
 
 
 
