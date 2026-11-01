@@ -1315,5 +1315,4 @@ def obtenerPose2D(Hj, K):
     return R, t
 
 
-
 # End.
