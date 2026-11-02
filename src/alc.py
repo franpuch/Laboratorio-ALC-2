@@ -1406,6 +1406,182 @@ def evaluarPose(R, t, obj_vecs, img_vecs, K):
 
     return validas, RMS
 
+def pseudoInversa(A):
+
+    U_hat, S_hat, V_hat = svd_reducida(A)
+
+    k = len(S_hat)
+
+    # Construimos la matriz diagonal con los inversos de los valores singulares no nulos.
+    S_inv = np.zeros((k, k))
+
+    for i in range(k):
+        S_inv[i, i] = 1 / S_hat[i]
+
+    # A+ = V * S_inv * U.T
+    pseudo = multiplicar_matrices(
+        multiplicar_matrices(V_hat, S_inv),
+        traspuesta(U_hat)
+    )
+
+    return pseudo 
+
+def aplicarPOSIT(obj_vecs, img_vecs, K, MaxIt, atol):
+
+    n_puntos = len(obj_vecs)
+
+    fx = K[0, 0]
+    fy = K[1, 1]
+    cu = K[0, 2]
+    cv = K[1, 2]
+
+    # 1. Centramos las coordenadas de la imagen.
+    img_centradas = np.zeros((n_puntos, 2))
+
+    for i in range(n_puntos):
+        img_centradas[i, 0] = img_vecs[i, 0] - cu
+        img_centradas[i, 1] = (img_vecs[i, 1] - cv) * fx / fy
+
+    M0 = obj_vecs[0]
+    m0 = img_centradas[0]
+
+    # 2. Construimos A con los vectores Mi - M0.
+    A = np.zeros((n_puntos - 1, 3))
+
+    for i in range(1, n_puntos):
+        A[i - 1, :] = obj_vecs[i] - M0
+
+    # Calculamos la pseudoinversa (no cambia con las iteraciones).
+    A_pseudo = pseudoInversa(A)
+
+    # 3. Calculamos el vector normal al plano de la H.
+    # Los primeros dos vectores de A no son paralelos.
+    a1 = A[0]
+    a2 = A[1]
+
+    n = np.array([
+        a1[1] * a2[2] - a1[2] * a2[1],
+        a1[2] * a2[0] - a1[0] * a2[2],
+        a1[0] * a2[1] - a1[1] * a2[0]
+    ])
+
+    n = n / norma(n, 2)
+
+    # Inicializamos los factores de perspectiva.
+    eps = np.zeros(n_puntos - 1)
+
+    rms_anterior = float("inf")
+    mejor_rms = float("inf")
+    mejor_R = None
+    mejor_t = None
+
+    # 5. Iteraciones de POSIT.
+    for iteracion in range(MaxIt):
+
+        # Construimos los vectores b(u) y b(v).
+        bu = np.zeros(n_puntos - 1)
+        bv = np.zeros(n_puntos - 1)
+
+        for i in range(n_puntos - 1):
+          bu[i] = img_centradas[i + 1, 0] * (1 + eps[i]) - m0[0]   # En 'img_centradas' ignoramos la 1er fila que corresponde al m0
+          bv[i] = img_centradas[i + 1, 1] * (1 + eps[i]) - m0[1]
+        
+        # Resolvemos los sistemas mediante la pseudoinversa.
+        I0 = calcularAx(A_pseudo, bu, vector_fila=True)
+        J0 = calcularAx(A_pseudo, bv, vector_fila=True)
+
+        # Con la función del 6.b calculamos lambda y mu.
+        lam, mu = calculoLambdaMu(I0, J0)
+
+        rms_iteracion = float("inf")
+        R_iteracion = None
+        t_iteracion = None
+        k_iteracion = None
+        Z0_iteracion = None
+
+        # Construimos las dos soluciones posibles.
+        I1 = I0 + lam * n
+        J1 = J0 + mu * n
+
+        I2 = I0 - lam * n
+        J2 = J0 - mu * n
+
+        # Con la función del 6.c recuperamos las dos poses.
+        i1, j1, k1, Z01, R1, t1 = calcularSalidaPOSIT(I1, J1, fx, m0, M0)
+
+        i2, j2, k2, Z02, R2, t2 = calcularSalidaPOSIT(I2, J2, fx, m0, M0)
+
+        # Con la función del 6.d evaluamos ambas poses.
+        validas1, rms1 = evaluarPose(R1, t1, obj_vecs, img_vecs, K)
+        validas2, rms2 = evaluarPose(R2, t2, obj_vecs, img_vecs, K)
+
+        # Elegimos la mejor pose válida.
+        if (validas1 == n_puntos) :
+
+          # La primera pose es válida.
+          if (validas2 != n_puntos) :
+
+            # La segunda no es válida. Elegimos la primera.
+            R_iteracion = R1
+            t_iteracion = t1
+            k_iteracion = k1
+            Z0_iteracion = Z01
+            rms_iteracion = rms1
+
+          else :
+
+            # Ambas son válidas. Comparamos los RMS.
+            if (rms1 <= rms2):
+
+              R_iteracion = R1
+              t_iteracion = t1
+              k_iteracion = k1
+              Z0_iteracion = Z01
+              rms_iteracion = rms1
+
+            else :
+
+              R_iteracion = R2
+              t_iteracion = t2
+              k_iteracion = k2
+              Z0_iteracion = Z02
+              rms_iteracion = rms2
+
+        else:
+
+          # La primera pose no es válida.
+          if (validas2 == n_puntos) :
+
+            # La segunda es válida. La elegimos.
+            R_iteracion = R2
+            t_iteracion = t2
+            k_iteracion = k2
+            Z0_iteracion = Z02
+            rms_iteracion = rms2
+
+          else:
+
+            # Ninguna de las dos poses es válida.
+            break
+
+        # Guardamos la mejor pose encontrada.
+        if (rms_iteracion < mejor_rms) :
+            mejor_rms = rms_iteracion
+            mejor_R = R_iteracion
+            mejor_t = t_iteracion
+
+        # Convergencia.
+        if (abs(rms_anterior - rms_iteracion) < atol) :
+            break
+
+        # Actualizamos los factores de perspectiva.
+        for i in range(0, n_puntos - 1) :
+
+            eps[i] = producto_interno(A[i], k_iteracion) / Z0_iteracion
+
+        rms_anterior = rms_iteracion
+
+    return mejor_R, mejor_t
 
 
 # End.
