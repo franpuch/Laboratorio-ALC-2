@@ -1314,5 +1314,98 @@ def obtenerPose2D(Hj, K):
 
     return R, t
 
+# Ejercicio 6 ------------------------------------------------------------------------------------------------------------------------------------- #
+
+def calculoLambdaMu(I0, J0):
+
+    d = producto_interno(J0, J0) - producto_interno(I0, I0)
+    p = -producto_interno(I0, J0)
+
+    if (p != 0) :
+
+        lam = np.sqrt((d + np.sqrt(d**2 + 4*(p**2))) / 2)
+        mu = p / lam
+
+    else:
+
+        if (d > 0) :
+            lam = np.sqrt(d)
+            mu = 0
+
+        elif (d < 0) :
+            lam = 0
+            mu = np.sqrt(-d)
+
+        else:
+            lam = 0
+            mu = 0
+
+    return (lam, mu)
+
+def calcularSalidaPOSIT(Is, Js, fx, m0, M0):
+
+    Z0 = fx / norma(Is, 2)
+
+    # Calculamos las primeras dos filas de R.
+    i = Is / norma(Is, 2)
+    j = Js / norma(Js, 2)
+
+    # Tercer fila con producto vectorial.
+    k = np.array([
+        i[1] * j[2] - i[2] * j[1],
+        i[2] * j[0] - i[0] * j[2],
+        i[0] * j[1] - i[1] * j[0]
+    ])
+
+    # Construimos la matriz de rotación R.
+    R = np.array([i, j, k])
+
+    # Coordenadas de M0 en el sistema de la cámara.
+    T0 = np.array([
+        Z0 * m0[0] / fx,
+        Z0 * m0[1] / fx,
+        Z0
+    ])
+
+    # Despejamos 't' de la ecuación (15) tomando M0.
+    t = T0 - calcularAx(R, M0, vector_fila=True)
+
+    return i, j, k, Z0, R, t
+
+def evaluarPose(R, t, obj_vecs, img_vecs, K):
+
+    validas = 0
+    suma_errores = 0
+
+    for i in range(len(obj_vecs)):
+
+        # Pasamos el punto al sistema de la cámara.
+        P = calcularAx(R, obj_vecs[i], vector_fila=True) + t
+
+        # Verificamos que esté delante de la cámara.
+        if (P[2] > 0) :
+
+            # Con K obtenemos las coordenadas en la foto medida en pixeles.
+            proy = calcularAx(K, P, vector_fila=True)
+
+            # Como siempre, dividimos por la 3er coordenada.
+            u_hat = proy[0] / proy[2]
+            v_hat = proy[1] / proy[2]
+
+            # Error cuadrático respecto del punto original.
+            error = (u_hat - img_vecs[i, 0])**2 + (v_hat - img_vecs[i, 1])**2
+
+            suma_errores += error
+            validas += 1
+
+    # Si ningún punto es válido, no podemos calcular el RMS.
+    if (validas == 0) :
+        return 0, "No hay puntos validos."
+
+    RMS = np.sqrt(suma_errores / validas)
+
+    return validas, RMS
+
+
 
 # End.
